@@ -1,5 +1,5 @@
 """
-Cronómetro e Contagem Decrescente em ASCII Art
+Relógio, Cronómetro e Contagem Decrescente em ASCII Art
 ==============================================
 
 Este programa mostra um cronómetro ou uma contagem decrescente no terminal,
@@ -8,15 +8,13 @@ com dígitos grandes desenhados em caracteres ASCII.
 Utilização:
 -----------
 1. Cronómetro (conta para cima):
-   python cronometro.py
+   python asclock.py -c
 
-2. Contagem decrescente (em minutos):
-   python cronometro.py <minutos>
+2. Temporizador (em minutos):
+   python asclock.py -t <min>
 
-Exemplos:
----------
-   python cronometro.py       # inicia cronómetro
-   python cronometro.py 5     # conta decrescente de 5 minutos
+3. Relógio
+   python asclock.py
 
 Funcionalidades:
 ----------------
@@ -26,29 +24,17 @@ Funcionalidades:
 - Mensagem de aviso no final da contagem decrescente.
 - Interrupção com CTRL+C.
 """
-
 import time
-import sys
 import os
-
+import sys
+import argparse
+   
 # Códigos ANSI para cores
-GREEN = "\033[92m"
+GREEN  = "\033[92m"
 YELLOW = "\033[93m"
-RED = "\033[91m"
-RESET = "\033[0m"
+RED    = "\033[91m"
+RESET  = "\033[0m"
 
-HELP = """
-    AsClock - ASCII CLOCK
-    V 0.1.0
-    Carlos Almeida
-
-    UTILIZAÇÃO:
-        $ asclock.py [opções] [parametros]
-    
-    OPÇÕES:
-        -t <min>    -> temporizador de min minutos;
-        -c          -> cronómetro;
-"""
 # Algarismos ASCII base (5x5). Usa apenas ASCII.
 DIGITS = {
     "0": [
@@ -140,6 +126,21 @@ DIGITS = {
 SCALE = 1          # aumenta/diminui o tamanho (1, 2, 3,...)
 SPACE_BETWEEN = 1  # espaçamento entre dígitos (em “colunas base”)
 
+
+# Parser Argumentos
+def setup_arg_parser():
+    """Configura e retorna o parser de argumentos da linha de comando."""
+    parser = argparse.ArgumentParser(
+        description="""Relógio, Cronómetro e Contagem Decrescente em ASCII Art.
+v 0.1.0
+Carlos Almeida""",
+        formatter_class=argparse.RawTextHelpFormatter
+    )
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("-c", "--cronometro", action="store_true", help="Executa em modo cronómetro (conta para cima).")
+    group.add_argument("-t", "--temporizador", type=int, metavar="MIN", help="Executa em modo temporizador por MIN minutos.")
+    return parser.parse_args()
+
 def scale_glyph(glyph_lines, k):
     """Escala um glifo 5x5 em kx (horizontal e vertical)."""
     out = []
@@ -152,29 +153,26 @@ def scale_glyph(glyph_lines, k):
 def render_big(text, k=SCALE, spacing=SPACE_BETWEEN):
     """Converte o texto (ex: '12:34:56') em ASCII grande."""
 
-    # Separar por partes
-    horas = text[0:2]               # O limite direito do intervalo é excluído;
-    minuto = text[3:5]
-    segundos = text[6:8]
-
-
-    glyphsHoras = [scale_glyph(DIGITS[ch], k) for ch in horas]
-    glyphsMinutos = [scale_glyph(DIGITS[ch], k) for ch in minuto]
-    glyphsSegundos = [scale_glyph(DIGITS[ch], k) for ch in segundos]
-    glyphsColon = scale_glyph(DIGITS[':'], k)
-
-    height = len(glyphsHoras[0])
+    time_parts = text.split(":")
+    colors = [GREEN, YELLOW, RED]
+    
+    # Gera os glifos para cada parte do tempo (HH, MM, SS)
+    part_glyphs = [[scale_glyph(DIGITS[char], k) for char in part] for part in time_parts]
+    colon_glyph = scale_glyph(DIGITS[':'], k)
+    
+    height = len(colon_glyph)
     gap = " " * (spacing * k)
     lines = []
+
     for r in range(height):
-        linha = (
-            GREEN + gap.join(g[r] for g in glyphsHoras) + RESET +
-            gap + gap.join(glyphsColon[r:r+1]) + gap +
-            YELLOW + gap.join(g[r] for g in glyphsMinutos) + RESET +
-            gap + gap.join(glyphsColon[r:r+1]) + gap +
-            RED + gap.join(g[r] for g in glyphsSegundos) + RESET
-        )
-        lines.append(linha)
+        line_parts = []
+        for i, glyphs in enumerate(part_glyphs):
+            # Adiciona a parte do tempo (ex: horas) com cor
+            line_parts.append(colors[i] + gap.join(g[r] for g in glyphs) + RESET)
+        
+        # Junta as partes com o separador ":"
+        separator = gap + colon_glyph[r] + gap
+        lines.append(separator.join(line_parts))
     return "\n".join(lines)
 
 def clear_screen():
@@ -217,10 +215,10 @@ def temporizador(minutos):
             h = totalSegundos // 3600
             m = (totalSegundos % 3600) // 60
             s = totalSegundos % 60
-            clockStr = f"{h:02d}:{m:02d}:{s:02d}T"
+            clock_str = f"{h:02d}:{m:02d}:{s:02d}"
 
             clear_screen()
-            print(render_big(clockStr))
+            print(render_big(clock_str))
 
             if totalSegundos == 0:
                 print("\n⏰ Acabou o tempo")
@@ -237,14 +235,13 @@ def temporizador(minutos):
         print("\n⏰ Contagem Interrompida")
 
 def relogio():
+    """Mostra o relógio com a hora atual do sistema."""
     start = time.monotonic()
     try:
         while True:
-            tempo = time.asctime()
-            hora = tempo[11:13]
-            minutos = tempo[14:16]
-            segundos = tempo[17:19]
-            texto = f"{hora:02s}:{minutos:02s}:{segundos:02s}"
+            now = time.localtime()
+            # Usa os campos tm_hour, tm_min, e tm_sec da estrutura de tempo
+            texto = f"{now.tm_hour:02d}:{now.tm_min:02d}:{now.tm_sec:02d}"
             clear_screen()
             print(render_big(texto))
 
@@ -256,25 +253,25 @@ def relogio():
         print("\n⏰ Relógio Terminado!")
 
 
-# ============================= TAG: MAIN ============================= #
-if __name__ == "__main__":
+# TAG: Main
+def main():
     # Em Windows antigos, isto ajuda o suporte a ANSI (no Win10+ já não costuma ser preciso).
+    # Especifico do windows.
     if os.name == "nt":
         os.system("")
-   
-    if len(sys.argv) > 1:
-        if sys.argv[1] == "-t":
-            try:
-                try:
-                    minutos = int(sys.argv[2])
-                    temporizador(minutos)
-                except:
-                    print(f"UTILIZAÇÃO: {sys.argv[0]} -t <minutos>")
-            except ValueError:
-                print("[ERRO]: Introduza um número inteiro em minutos!")
-        elif sys.argv[1] == "-c":
-            cronometro()
-        elif sys.argv[1] == "-h" or sys.argv[1] == "-help":
-            print (HELP)
+        os.system("mode 49,7") # Redimensiona o terminal do windows
+
+    args = setup_arg_parser()
+
+    if args.cronometro:
+        cronometro()
+    elif args.temporizador:
+        # argparse já garante que o valor é um inteiro
+        temporizador(args.temporizador)
     else:
+        # Modo padrão: relógio
         relogio()
+
+
+if __name__ == "__main__":
+    main()
