@@ -1,0 +1,7 @@
+[project]
+name = "asclock"
+version = "0.1.0"
+description = "Relógio em formato ASCII"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
