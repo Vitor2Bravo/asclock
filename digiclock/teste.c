@@ -21,14 +21,10 @@ int main(int argc, char *argv[])
     //    for (int i = 1; i < argc; i ++)     // Ciclo sobre os argumentos
     //        printf("%s\n", trimArg(argv[i]));
     //}
-    //for (int i = 1; i < argc; i++)
-    //{
-    //    printf("%d\n", validarArgumento(argv[i], opcoes, 6));
-    //}
 
     int n_args = numeroArgumentos(argc, argv, opcoes, 6);
-    
-    printf("Número de argumentos: %d\n",n_args);
+
+    printf("Número de argumentos: %d\n", n_args);
 
     VetArgs *args = extrairArgumentos(n_args, argc, argv, opcoes, 6);
 

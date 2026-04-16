@@ -17,9 +17,6 @@ char *trimArg(char *argv)
     return argv;
 }
 
-/*
-    Testa quanto à validade, um argumento passado pela linha de comandos.
-*/
 bool validarArgumento(char *argv, const Option *opcoes, int n_opcoes)
 {
     if ((argv[0] == '-' && argv[1] != '-') || (argv[0] == '-' && argv[1] == '-'))
@@ -83,30 +80,25 @@ VetArgs *extrairArgumentos(int n_args, int argc, char *argv[], const Option *opc
         {
             char *cleanArg = trimArg(argv[i]);
             
-            strncpy(args->dados[count].argumento, cleanArg, strlen(cleanArg));
-            args->dados[count].argumento[strlen(cleanArg)] = '\0';
+            strncpy_s(args->dados[count].argumento, N_ARG, cleanArg, strlen(cleanArg) + 1);
             args->dados[count].parametro[0] = '\0'; // Inicializa vazio
             
             // Verifica se este argumento espera um parâmetro (t, e, o ou formas longas)
             if (!strcmp(cleanArg, "t") || !strcmp(cleanArg, "tempo") ||
                 !strcmp(cleanArg, "e") || !strcmp(cleanArg, "esp"))
             {
-                if (i + 1 < argc && argv[i+1][0] != '-') 
+                if (i + 1 < argc && argv[i + 1][0] != '-') 
                 {
-                    strcpy_s(args->dados[count].parametro, strlen(argv[i + 1]), argv[i + 1]);
-                    args->dados[count].parametro[strlen(argv[i + 1]) + 1] = '\0';
+                    strncpy_s(args->dados[count].parametro, N_PAR, argv[i + 1], strlen(argv[i + 1]));
                     i++; // Pula o próximo pois ele é o valor do parâmetro
                 }
             } 
             else if (!strcmp(cleanArg, "o") || !strcmp(cleanArg, "cor"))
             {
-                // Verifica se existem os 3 parâmetros de cor (R G B)
                 if (i + 3 < argc)
                 {
-                    // Formata R, G e B em uma única string separada por espaços
-                    snprintf(args->dados[count].parametro, N_PAR, "%3s%3s%3s", 
-                             argv[i + 1], argv[i + 2], argv[i + 3]);
-                    i += 3; // Pula os 3 parâmetros consumidos
+                    sprintf_s(args->dados[count].parametro, N_PAR, "%s %s %s", argv[i + 1], argv[i + 2], argv[i + 3]);
+                    i += 3; // Pula os 3 valores RGB consumidos
                 }
             }
             count ++;
@@ -115,7 +107,7 @@ VetArgs *extrairArgumentos(int n_args, int argc, char *argv[], const Option *opc
 
     if(count != n_args)
     {
-        fprintf(stderr, "Número de argumentos discrepantes: %d != %d.\n", count, n_args);
+        fprintf(stderr, "Número de Argumentos Inválidos!\n");
         exit(-1);
     }
 
