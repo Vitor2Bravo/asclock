@@ -257,7 +257,7 @@ typedef struct Rectangle {
     float y;                // Rectangle top-left corner position y
     float width;            // Rectangle width
     float height;           // Rectangle height
-} Rectangle;
+} Rectangle;              // Rectangle
 
 // Image, pixel data stored in CPU memory (RAM)
 typedef struct Image {

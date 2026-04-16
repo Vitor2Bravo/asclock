@@ -3,23 +3,28 @@
   Carlos Almeida
 */
 
+// Disable the console in Windows releases
+//# if defined(WIN32) && !defined(_DEBUG)
+//#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+//#endif
+
 #include <stdio.h>
-#include <string.h>
+//#include <string.h>
 #include <stdlib.h>
 #include <time.h>
 #include <stdbool.h>
 #include "includes/src/raylib.h"
-#include "includes/myargs.h"
+#include "includes/cma_args.h"
 
 
-#define HELP    "DigiClock v0.1\n\n"                                                                              \
+#define HELP    "DigiClock v0.1\n\n"                                                                          \
                 "Utilização: casclock.exe [opção]\n\n"                                                        \
                 "Opções:\n"                                                                                   \
                 "   -h, --help          Mostra esta mensagem e sai.\n"                                        \
                 "   -c, --crono         Contagem ascendente a partir do zero (cronómetro).\n"                 \
                 "   -t, --tempo MIN     Contagem descendente a partir de um valor em minutos [MIN] dado.\n"   \
-                "   -e, --esp VAL       Especifica a espessura dos segmentos.\n"   \
-                "   -o   --cor   r g b  Define a cor dos digitos do relógio no formato RGB.\n"                \
+                "   -e, --esp VAL       Especifica a espessura dos segmentos.\n"                              \
+                "   -o, --cor   r g b   Define a cor dos digitos do relógio no formato RGB.\n"                \
                 "MODO PADRÃO (Sem Opção): Relógio, cor = VERMELHO, espessura = 25.\n\n"
 
 const Option opcoes[] = {
@@ -32,9 +37,6 @@ const Option opcoes[] = {
 };
 
 
-
-
-
 #define _DARKGRAY           (Color){ 20, 20, 20, 255 }
 float espessura = 25;       // Tamanho predefinido da espessura do segmento;
 
@@ -44,7 +46,7 @@ Pausa a execução do programa.
 void pausa()
 {
     printf("Precione ENTER para continuar.\n");
-	getchar();
+    getchar();
 }
 
 
@@ -127,12 +129,12 @@ void renderDigito(int digito, Vector2 posicao, Color cor)
     float deslocamento = 2;     // Espaço entre segmentos;
 
     /*a*/renderSegmento((Vector2) {pos_x, pos_y - comprimento - (deslocamento * 2)}, true, (digitos[digito][0]? true : false), cor);     // a
-    /*b*/renderSegmento((Vector2) {pos_x + (comprimento / 2) + deslocamento, pos_y - (comprimento / 2) - deslocamento}, false, (digitos[digito][1]? true : false), cor);    // b   
-    /*c*/renderSegmento((Vector2) {pos_x + (comprimento / 2) + deslocamento, pos_y + (comprimento / 2) + deslocamento}, false, (digitos[digito][2]? true : false), cor);    // c
-    /*d*/renderSegmento((Vector2) {pos_x, pos_y + comprimento + (deslocamento * 2)}, true, (digitos[digito][3]? true : false), cor);    // d
-    /*e*/renderSegmento((Vector2) {pos_x - (comprimento / 2) - deslocamento, pos_y + (comprimento / 2) + deslocamento}, false, (digitos[digito][4]? true : false), cor);    // e
-    /*f*/renderSegmento((Vector2) {pos_x - (comprimento / 2) - deslocamento, pos_y - (comprimento / 2) - deslocamento}, false, (digitos[digito][5]? true : false), cor);    // f
-    /*g*/renderSegmento((Vector2) {pos_x, pos_y}, true, (digitos[digito][6]? true : false), cor);    // g // Segmento central;
+    /*b*/renderSegmento((Vector2) {pos_x + (comprimento / 2) + deslocamento, pos_y - (comprimento / 2) - deslocamento}, false, digitos[digito][1], cor);    // b   
+    /*c*/renderSegmento((Vector2) {pos_x + (comprimento / 2) + deslocamento, pos_y + (comprimento / 2) + deslocamento}, false, digitos[digito][2], cor);    // c
+    /*d*/renderSegmento((Vector2) {pos_x, pos_y + comprimento + (deslocamento * 2)}, true, digitos[digito][3], cor);    // d
+    /*e*/renderSegmento((Vector2) {pos_x - (comprimento / 2) - deslocamento, pos_y + (comprimento / 2) + deslocamento}, false, digitos[digito][4], cor);    // e
+    /*f*/renderSegmento((Vector2) {pos_x - (comprimento / 2) - deslocamento, pos_y - (comprimento / 2) - deslocamento}, false, digitos[digito][5], cor);    // f
+    /*g*/renderSegmento((Vector2) {pos_x, pos_y}, true, digitos[digito][6], cor);    // g // Segmento central;
 
 }
 
@@ -188,75 +190,64 @@ void render(int horas, int minutos, int segundos, Color cor)
 */
 void cronometro(Color cor)
 {
-    int hora = 0;
-    int minuto = 0;
-    int segundo = 0;
+    static int hora = 0;
+    static int minuto = 0;
+    static int segundo = 0;
 
-    while(true)
+    segundo ++;
+
+    if (segundo == 60)
     {
-        segundo ++;
-
-        if (segundo == 60)
-        {
-            minuto ++;
-            segundo = 0;
-        }
-        
-        if (minuto == 60)
-        {
-            hora ++;
-            minuto = 0;
-        }
-        
-        render(hora, minuto, segundo, cor);
-        WaitTime(1);  
+        minuto ++;
+        segundo = 0;
     }
+        
+    if (minuto == 60)
+    {
+        hora ++;
+        minuto = 0;
+    }
+        
+    render(hora, minuto, segundo, cor);
+    WaitTime(1);  
+    
 }
 
 /*
     Efetua contagem descendente a partir de um valor em minutos dado.
 */
-void temporizador(int minutos, Color cor)
+void temporizador(long minutos, Color cor, bool *fim)
 {
-    int hora = 0;
-    int minuto = 0;
-    int segundo = 0;
-    int contador = minutos * 60;
+    static long totalSegundos = -1;
+    static double ultimaAtualizacao = 0;
 
-    if (minutos > 60)   // Tempo superior a 1 hora;
-    {
-        hora = (minutos / 60);
-        minuto = (minutos % 60) - 1;
-        segundo = 60;
+    // Na primeira chamada calcula o total de segundos temprizados;
+    if (totalSegundos == -1) {
+        totalSegundos = minutos * 60;
+        ultimaAtualizacao = GetTime();
     }
-    else                // Tempo inferior a 1 hora;
-    {
-        minuto = minutos - 1;
-        segundo = 60;
-    }    
 
-    while (contador > 0)
-    {
-        segundo --;
-                
-        if (segundo == 0 && minuto > 0 && hora > 0)
-        {
-            segundo = 60;
-            minuto --;
+    // GetTime obtém o tempo em segundos;
+    // Se tempo maior que 0 desconta;
+    // Se tempo <= o termina;
+    double tempoAtual = GetTime();
+    if (tempoAtual - ultimaAtualizacao >= 1.0) {
+        if (totalSegundos > 0) {
+            totalSegundos--;
+        } else {
+            *fim = true;
         }
-        
-        if (segundo == 0 && minuto == 0 && hora > 0)
-        {
-            segundo = 60;
-            minuto = 60;
-            hora --;
-        }
+        ultimaAtualizacao = tempoAtual;
+    }
 
-        contador --;
-        render(hora, minuto, segundo, cor);
-        WaitTime(1);  
-    } 
+    // 1 hora = 3600 segundos;
+    int h = totalSegundos / 3600;
+    int m = (totalSegundos % 3600) / 60;
+    int s = totalSegundos % 60;
+
+    render(h, m, s, cor);
 }
+
 /*
     Retorna a Hora do sistema para renderização.
 */
@@ -264,11 +255,11 @@ void relogio(Color cor)
 {
     time_t t;
     time(&t);
-    struct tm tempo;
-    localtime_s(&tempo, &t);
-    int hora = tempo.tm_hour;
-    int minutos = tempo.tm_min;
-    int segundos = tempo.tm_sec;
+    struct tm *tempo;
+    tempo = localtime(&t);
+    int hora = tempo->tm_hour;
+    int minutos = tempo->tm_min;
+    int segundos = tempo->tm_sec;
     render(hora, minutos, segundos, cor);
 }
 
@@ -277,64 +268,72 @@ int main(int argc, char *argv[])
 {
     const int screenWidth = 35 * espessura;
     const int screenHeight = 9 * espessura;
-    Color cor = RED;    // Cor padrão
+    Color cor = RED;    // Cor padrão;
+    Image icon = LoadImage("./resources/digi_icon.png");
+    
+    // Opções: r, h, c, t, e, o
+    char opcao = 't';   // Modo padrão;
+    long min = 0;       // Temporizador;
+    bool encerrarTemporizador = false;
 
-    char opcao = 'r';
-
-    if (!validarArgumentos(argc, argv))     //FIXME
-        help(); 
-
-    if (argc == 1)      // PADRÃO: Relógio;
-    {
-        relogio(cor);
-    }
-    else if (argc == 2)
-    {
-        if (!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")) help();
+    //int n_args = numeroArgumentos(argc, argv);
+    //VetArgs *args = extrairArgumentos(n_args, argc, argv, opcoes, 6);
         
-        else if(!strcmp(argv[1], "-c") || !strcmp(argv[1], "--crono"))
-        {
-            cronometro(cor);
-        }
-        else help();
-    }
-    else if (argc == 3)
-    {
-        if (!strcmp(argv[1], "-t") || !strcmp(argv[1], "--tempo"))
-        {
-            if(atoi(argv[2]))
-            {
-                int minutos = atoi(argv[2]);
-                temporizador(minutos, cor);
-            }
-            else help();
-
-        }
-        else help();
-    }
 
 /* ================= Declaração e inicialização ================= */
-             
+    SetTraceLogLevel(LOG_NONE);         
     InitWindow(screenWidth, screenHeight, "Relógio Digital");
     SetWindowState(FLAG_WINDOW_TOPMOST);
+    SetWindowIcon(icon);
     SetTargetFPS(60);
 
 /* ================= Loop Principal ================= */
 
-    while (!WindowShouldClose())
+    while (!WindowShouldClose() && !encerrarTemporizador)
     {
         
-        /*----------------------------------------------------- */
-        // TODO: Update your variables here
-        /*----------------------------------------------------- */
-
+        
         /* ================= Renderização ================= */
         BeginDrawing();
-
-            ClearBackground(BLACK);
+        
+        ClearBackground(BLACK);
+        
+        switch (opcao)
+        {
+            case ('c'):
+            {
+                cronometro(GREEN);
+                break;
+            }
             
-            relogio(cor);
+            case ('t'):
+            {
+                temporizador(2, BLUE, &encerrarTemporizador);
+                break;
+            }
+            
+            case ('e'):
+            {
 
+                break;
+            }
+            
+            case ('o'):
+            {
+
+                break;
+            }
+
+            case ('h'):
+            {
+                help();
+                break;
+            }
+            default:
+            relogio(cor);
+            break;
+        };
+        
         EndDrawing();
     }
 

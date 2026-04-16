@@ -46,6 +46,9 @@
 
 // Estruturas
 
+//TAG: Macros
+
+#define UNUSED(x)   ((void) x)
 
 //TAG: Funções
 
