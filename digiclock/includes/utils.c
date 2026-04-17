@@ -10,6 +10,24 @@
 #include <string.h>
 //#include <time.h>
 #include <stdbool.h>
+#include "src/raylib.h"
+
+//TAG: Wrapers
+
+Image rlLoadImage(char *caminho)
+{
+	return LoadImage(caminho);
+}
+
+void rlCloseWindow()
+{
+	return CloseWindow();
+}
+
+void rlShowCursor()
+{
+	return ShowCursor();
+}
 
 /* posicionar cursor. */
 void pCursor (int x, int y)
@@ -102,8 +120,8 @@ int *gerRnd(int nElementos, int maximo, bool incluirZero)
 /*
 Pausa a execução do programa.
 */
-void pausa()
-{
-	printf("Precione ENTER para continuar.\n");
-	getchar();
-}
+//void pausa()
+//{
+//	printf("Precione ENTER para continuar.\n");
+//	getchar();
+//}

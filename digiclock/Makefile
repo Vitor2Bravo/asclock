@@ -2,12 +2,12 @@
 
 BIN = digiclock.exe
 CC = gcc
-CFLAGS = -Wall -Wextra -std=c99
+CFLAGS = -Wall -Wextra -std=c11
 CPPFLAGS = -Iincludes/src -Iincludes/src/external
 LDFLAGS = -Lincludes/src
 LDLIBS = -lraylib -lopengl32 -lgdi32 -lwinmm -lcomdlg32
 
-SRC = main.c ./includes/cma_args.c
+SRC = main.c ./includes/cma_args.c ./includes/utils.c
 OBJ = $(SRC:.c=.o)
 
 # Alvo padrão
