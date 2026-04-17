@@ -79,8 +79,12 @@ VetArgs *extrairArgumentos(int n_args, int argc, char *argv[], const Option *opc
         if ((argv[i][0] == '-') && (validarArgumento(argv[i], opcoes, n_opcoes)))
         {
             char *cleanArg = trimArg(argv[i]);
-            
+
+            #ifdef _WIN32 
             strncpy_s(args->dados[count].argumento, N_ARG, cleanArg, strlen(cleanArg) + 1);
+            #else
+            strncpy(args->dados[count].argumento, cleanArg, strlen(cleanArg) + 1);
+            #endif // _WIN32
             args->dados[count].parametro[0] = '\0'; // Inicializa vazio
             
             // Verifica se este argumento espera um parâmetro (t, e, o ou formas longas)
@@ -89,7 +93,11 @@ VetArgs *extrairArgumentos(int n_args, int argc, char *argv[], const Option *opc
             {
                 if (i + 1 < argc && argv[i + 1][0] != '-') 
                 {
+                    #ifdef _WIN32
                     strncpy_s(args->dados[count].parametro, N_PAR, argv[i + 1], strlen(argv[i + 1]));
+                    #else
+                    strncpy(args->dados[count].parametro, argv[i + 1], strlen(argv[i + 1]));
+                    #endif // _WIN32
                     i++; // Pula o próximo pois ele é o valor do parâmetro
                 }
             } 
@@ -97,7 +105,11 @@ VetArgs *extrairArgumentos(int n_args, int argc, char *argv[], const Option *opc
             {
                 if (i + 3 < argc)
                 {
+                    #ifdef _WIN32
                     sprintf_s(args->dados[count].parametro, N_PAR, "%s %s %s", argv[i + 1], argv[i + 2], argv[i + 3]);
+                    #else
+                    sprintf(args->dados[count].parametro, "%s %s %s", argv[i + 1], argv[i + 2], argv[i + 3]);
+                    #endif // _WIN32
                     i += 3; // Pula os 3 valores RGB consumidos
                 }
             }

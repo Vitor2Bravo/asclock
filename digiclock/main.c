@@ -11,6 +11,9 @@
 #include "includes/src/raylib.h"
 #include "includes/cma_args.h"
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif // _WIN32
 
 #define HELP    "DigiClock v0.1\n\n"                                                                          \
                 "Utilização: digiclock.exe [opção]\n\n"                                                        \
@@ -273,47 +276,60 @@ int main(int argc, char *argv[])
     {
         if (!strcmp(args->dados[i].argumento, "h") || !strcmp(args->dados[i].argumento, "help"))
         {
+            #ifdef _WIN32
+                STARTUPINFO si;
+                PROCESS_INFORMATION pi;
+
+                ZeroMemory( &si, sizeof(si) );
+                si.cb = sizeof(si);
+                ZeroMemory( &pi, sizeof(pi) );
+            
+                if( !CreateProcess( "ls",           // No module name (use command line)
+                                    NULL,           // Command line
+                                    NULL,           // Process handle not inheritable
+                                    NULL,           // Thread handle not inheritable
+                                    false,          // Set handle inheritance to FALSE
+                                    0,              // No creation flags
+                                    NULL,           // Use parent's environment block
+                                    NULL,           // Use parent's starting directory 
+                                    &si,            // Pointer to STARTUPINFO structure
+                                    &pi )           // Pointer to PROCESS_INFORMATION structure
+                ) 
+                {
+                    printf( "CreateProcess failed (%d).\n", GetLastError() );
+                    return 1;
+                }
+            #endif // _WIN32
+
             help();
             return 0;
         }
         
         if (!strcmp(args->dados[i].argumento, "c") || !strcmp(args->dados[i].argumento, "crono"))
-        {
             opcao = 'c';
-            cor = GREEN;
-        }
 
         if (!strcmp(args->dados[i].argumento, "t") || !strcmp(args->dados[i].argumento, "tempo"))
         {
             opcao = 't';
-            cor = BLUE;
             min = atoi(args->dados[i].parametro);
         }
 
         if (!strcmp(args->dados[i].argumento, "e") || !strcmp(args->dados[i].argumento, "esp"))
-        {
             espessura = atof(args->dados[i].parametro);
-        }
-
+        
         if (!strcmp(args->dados[i].argumento, "o") || !strcmp(args->dados[i].argumento, "cor"))
         {
             int red, green, blue;
             
-            // rrr ggg bbb
-            // 012 345 678
-            //for (int  c = 0; c < 3; c++)
-            //{
-            //    strncat_s(red, 4, (char *) args->dados[i].parametro[0 + c], 1);         // Vermelho;
-            //    strncat_s(green, 4, (char *) args->dados[i].parametro[3 + c], 1);       // Verde;
-            //    strncat_s(blue, 4, (char *) args->dados[i].parametro[6 + c], 1);        // Azul;
-            //}
-            
-            sscanf_s(args->dados[i].parametro, "%d %d %d", &red, &green, &blue);
-
-            cor = (Color) {.r = red,
-                            .g = green,
-                            .b = blue,
-                            .a = 255};
+            #ifdef _WIN32
+            if(sscanf_s(args->dados[i].parametro, "%d %d %d", &red, &green, &blue) == 3)
+            #else
+            if(sscanf(args->dados[i].parametro, "%d %d %d", &red, &green, &blue) == 3)
+            #endif
+                cor = (Color) {.r = red,
+                                .g = green,
+                                .b = blue,
+                                .a = 255};
         }
     }
     
@@ -321,7 +337,9 @@ int main(int argc, char *argv[])
     const int screenHeight = 9 * espessura;
 
 /* ================= Declaração e inicialização ================= */
-    //SetTraceLogLevel(LOG_NONE);
+    #ifdef _UNIX
+        SetTraceLogLevel(LOG_NONE);
+    #endif // _UNIX
 
     InitWindow(screenWidth, screenHeight, "Relógio Digital");
     SetWindowState(FLAG_WINDOW_TOPMOST);
