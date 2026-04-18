@@ -7,7 +7,8 @@ CPPFLAGS = -Iincludes/src -Iincludes/src/external
 LDFLAGS = -Lincludes/src
 LDLIBS = -lraylib -lopengl32 -lgdi32 -lwinmm -lcomdlg32
 
-SRC = main.c ./includes/cma_args.c ./includes/utils.c
+SRC = main.c
+# ./includes/cma_args.c
 OBJ = $(SRC:.c=.o)
 
 # Alvo padrão

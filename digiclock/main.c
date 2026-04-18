@@ -8,10 +8,16 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdbool.h>
-//#include "includes/src/raylib.h"
-#include "includes/cma_args.h"
 #include "includes/src/raylib.h"
-#include "includes/utils.h"
+//#include "includes/utils.h"
+
+#define CMA_ARGS_IMPLEMENTATION
+#include "includes/cma_args.h"
+
+#define CMA_UTILS_IMPLEMENTATION
+#include "includes/cma_utils.h"
+
+/* ============== CONFLITOS WINDOWS ============== */
 
 #ifdef _WIN32
 #define NOGDICAPMASKS     // CC_*, LC_*, PC_*, CP_*, TC_*, RC_
@@ -60,8 +66,10 @@ typedef struct tagMSG *LPMSG;
 #include <Windows.h>
 #endif // _WIN32
 
-#define HELP    "DigiClock v0.1\n\n"                                                                          \
-                "Utilização: digiclock.exe [opção]\n\n"                                                        \
+/* ============== CONFLITOS WINDOWS ============== */
+
+#define HELP    "DigiClock v1.0.0\n\n"                                                                          \
+                "Utilização: digiclock.exe [opção] [parametro]\n\n"                                                        \
                 "Opções:\n"                                                                                   \
                 "   -h, --help              Mostra esta mensagem e sai.\n"                                        \
                 "   -c, --crono             Contagem ascendente a partir do zero (cronómetro).\n"                 \
@@ -83,16 +91,6 @@ const Option opcoes[] = {
 float espessura = 25;       // Tamanho predefinido da espessura do segmento;
 
 #define UNUSED(x)   ((void) x)
-
-/*
-Pausa a execução do programa.
-*/
-void pausa()
-{
-    printf("Precione ENTER para continuar.\n");
-    getchar();
-}
-
 
 /*
     Apresenta a mensagem de ajuda e utilização.
@@ -305,15 +303,15 @@ void relogio(Color cor)
 
 int main(int argc, char *argv[])
 {
+    TODO("Implementar estrutura de Contexto.");
+
     Color back_cor = BLACK; // Cor do fundo;
     Color cor  = RED;       // Cor padrão digitos;
-    Image icon = rlLoadImage("./resources/digi_icon.png");
+    Image icon = LoadImage("./resources/digi_icon.png");
     //Image icon = LoadImage("./resources/digi_icon.png");
     char opcao = 'r';       // Opções: r (Padrão), h, c, t, e, o;
     long min   = 0;         // Temporizador;
     bool encerrarTemporizador = false;
-
-    UNUSED(min);
 
     int n_args = numeroArgumentos(argc, argv, opcoes, 6);
     VetArgs *args = extrairArgumentos(n_args, argc, argv, opcoes, 6);
@@ -330,16 +328,16 @@ int main(int argc, char *argv[])
                 si.cb = sizeof(si);
                 ZeroMemory(&pi, sizeof(pi));
                 //TODO: digi_help.exe
-                if(!CreateProcess(NULL,             // No module name (use command line)
-                                    "digi_help.exe",    // Command line
-                                    NULL,         // Process handle not inheritable
-                                    NULL,          // Thread handle not inheritable
-                                    false,            // Set handle inheritance to FALSE
-                                    0,                // No creation flags
-                                    NULL,               // Use parent's environment block
-                                    NULL,          // Use parent's starting directory 
-                                    &si,                // Pointer to STARTUPINFO structure
-                                    &pi)         // Pointer to PROCESS_INFORMATION structure
+                if(!CreateProcess(NULL,                         // No module name (use command line)
+                                    "notepad digiclock.hlp",    // Command line
+                                    NULL,                   // Process handle not inheritable
+                                    NULL,                       // Thread handle not inheritable
+                                    false,                      // Set handle inheritance to FALSE
+                                    0,                          // No creation flags
+                                    NULL,                       // Use parent's environment block
+                                    NULL,                       // Use parent's starting directory 
+                                    &si,                        // Pointer to STARTUPINFO structure
+                                    &pi)                        // Pointer to PROCESS_INFORMATION structure
                 ) 
                 {
                     printf( "CreateProcess failed (%lu).\n", GetLastError() );
@@ -351,7 +349,7 @@ int main(int argc, char *argv[])
             #endif // _WIN32
 
             help();
-            rlCloseWindow();
+            CloseWindow();
             return 0;
         }
         
@@ -429,7 +427,7 @@ int main(int argc, char *argv[])
         EndDrawing();
     }
 
-    rlCloseWindow();                    // Close window and OpenGL context
+    CloseWindow();                    // Close window and OpenGL context
 
     return 0;
 }
