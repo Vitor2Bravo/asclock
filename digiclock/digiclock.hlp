@@ -1,0 +1,10 @@
+DigiClock v1.0.0                                                                          
+Carlos Almeida
+Utilização: digiclock.exe [opção] [parametro]
+Opções:
+   -h, --help              Mostra esta mensagem e sai.
+   -c, --crono             Contagem ascendente a partir do zero (cronómetro).
+   -t, --tempo MIN         Contagem descendente a partir de um valor em minutos [MIN] dado.
+   -e, --esp VAL           Especifica a espessura dos segmentos.
+   -o, --cor rrr ggg bbb   Define a cor dos digitos do relógio no formato RGB.
+MODO PADRÃO (Sem Opção): Relógio, cor = VERMELHO, espessura = 25.

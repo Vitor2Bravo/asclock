@@ -310,14 +310,7 @@ void relogio(Context *cnt)
 
 int main(int argc, char *argv[])
 {
-    Context *cnt = (Context *) malloc(sizeof(Context));
-    if (!cnt)
-    {
-        fprintf(stderr, "Erro Criação de contexto: %s\n", strerror(errno));
-        return -1;
-    }
-
-    *cnt = (Context) {  
+    Context cnt = (Context) {  
             .bg_cor =       BLACK,
             .cor    =       RED,
             .espessura =    25
@@ -378,7 +371,7 @@ int main(int argc, char *argv[])
         }
 
         if (!strcmp(args->dados[i].argumento, "e") || !strcmp(args->dados[i].argumento, "esp"))
-            cnt->espessura = atof(args->dados[i].parametro);
+            cnt.espessura = atof(args->dados[i].parametro);
         
         if (!strcmp(args->dados[i].argumento, "o") || !strcmp(args->dados[i].argumento, "cor"))
         {
@@ -390,12 +383,12 @@ int main(int argc, char *argv[])
             if(sscanf(args->dados[i].parametro, "%d %d %d", &red, &green, &blue) == 3)
             #endif
                 
-                cnt->cor = (Color) {red, green, blue, 255};
+                cnt.cor = (Color) {red, green, blue, 255};
         }
     }
     
-    const int screenWidth  = 35 * cnt->espessura;
-    const int screenHeight = 9 * cnt->espessura;
+    const int screenWidth  = 35 * cnt.espessura;
+    const int screenHeight = 9 * cnt.espessura;
 
 /* ================= Declaração e inicialização ================= */
     #ifdef _WIN32
@@ -416,24 +409,24 @@ int main(int argc, char *argv[])
         /* ================= Renderização ================= */
         BeginDrawing();
         
-        ClearBackground(cnt->bg_cor);
+        ClearBackground(cnt.bg_cor);
         
         switch (opcao)
         {
             case ('c'):
             {
-                cronometro(cnt);
+                cronometro(&cnt);
                 break;
             }
             
             case ('t'):
             {
-                temporizador(cnt, min);
+                temporizador(&cnt, min);
                 break;
             }
            
             default:
-            relogio(cnt);
+            relogio(&cnt);
             break;
         };
         
@@ -441,6 +434,6 @@ int main(int argc, char *argv[])
     }
 
     CloseWindow();                    // Close window and OpenGL context
-    free(cnt);
+
     return 0;
 }
